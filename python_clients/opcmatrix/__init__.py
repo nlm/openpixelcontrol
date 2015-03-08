@@ -24,7 +24,7 @@ class MatrixDriver(object):
 class TetrisMatrixDriver(MatrixDriver):
 
     def __init__(self):
-        super(self.__class__, self).__init__(10, 20)
+        super(TetrisMatrixDriver, self).__init__(10, 20)
 
 
 class VikTetrisMatrixDriver(TetrisMatrixDriver):
@@ -41,7 +41,7 @@ class VikTetrisMatrixDriver(TetrisMatrixDriver):
 class FreespaceMatrixDriver(MatrixDriver):
 
     def __init__(self):
-        super(self.__class__, self).__init__(25, 25)
+        super(FreespaceMatrixDriver, self).__init__(25, 25)
 
     def getidx(self, x, y):
         if x > self.width or y > self.height:
