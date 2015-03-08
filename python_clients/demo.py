@@ -42,7 +42,7 @@ parser.add_argument('-H', dest='IP_PORT', default="127.0.0.1:7890",
                     help='IP:PORT to connect to')
 parser.add_argument('-t', dest='type', metavar='type', required='True',
                     choices=choices, help='the feature to show')
-parser.add_argument('-f', dest='fps', metavar='fps', type=int,
+parser.add_argument('-f', dest='fps', metavar='fps', type=float,
                     help='number of frames per second', default=0)
 parser.add_argument('-i', dest='iframes', metavar='frames', type=int,
                     help='interpolation frames', default=0)
