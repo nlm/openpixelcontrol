@@ -30,7 +30,7 @@ import opcmatrix
 #-------------------------------------------------------------------------------
 # handle command line
 
-choices = ['matrix', 'image', 'anim', 'test']
+choices = ['matrix', 'image', 'anim', 'test', 'text']
 drivers = {
     'tetris': opcmatrix.TetrisMatrixDriver,
     'viktetris': opcmatrix.VikTetrisMatrixDriver,
@@ -85,6 +85,9 @@ elif args.type == 'anim':
 elif args.type == 'image':
     matrix = opcmatrix.ImageMatrix(client, driver)
     matrix.load(args.file, args.resize)
+elif args.type == 'text':
+    matrix = opcmatrix.TextMatrix(client, driver)
+    matrix.print('test')
 elif args.type == 'test':
     matrix = opcmatrix.TestMatrix(client, driver)
 

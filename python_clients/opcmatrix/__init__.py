@@ -113,22 +113,30 @@ class AutoMatrix(Matrix):
             raise Exception('fps <= 0')
         while True:
             if self.iframes == 0:
+                starttime = time.time()
                 self.update()
                 self.render()
-                time.sleep(1 / self.fps)
+                endtime = time.time()
+                time.sleep(max(0, 1 / self.fps - (endtime - starttime)))
             else:
                 startframe = [list(pixel) for pixel in self.pixels]
                 self.update()
                 endframe = [list(pixel) for pixel in self.pixels]
                 for frame in range(self.iframes):
+                    starttime = time.time()
                     self.pixels = [[t1 + ((t2 - t1) * (frame + 1) / (self.iframes + 1))
                                   for t1, t2 in zip(startpixel, endpixel)]
                                   for startpixel, endpixel in zip(startframe, endframe)]
                     self.render()
-                    time.sleep(1 / (self.fps * (1 + self.iframes)))
+                    endtime = time.time()
+                    time.sleep(max(0, 1 / (self.fps * (1 + self.iframes))
+                                      - (endtime - starttime)))
+                starttime = time.time()
                 self.pixels = endframe
                 self.render()
-                time.sleep(1 / (self.fps * (1 + self.iframes)))
+                endtime = time.time()
+                time.sleep(max(0, 1 / (self.fps * (1 + self.iframes))
+                                  - (endtime - starttime)))
 
 #-------------------------------------------------------------------------------
 # Test Matrix
@@ -221,7 +229,7 @@ class ImageMatrix(Matrix):
 class AnimatedImageMatrix(AutoMatrix, ImageMatrix):
 
     def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(AnimatedImageMatrix, self).__init__(*args, **kwargs)
         self.img = None
 
     def load(self, filename, rsz_mode=0):
@@ -244,6 +252,24 @@ class AnimatedImageMatrix(AutoMatrix, ImageMatrix):
             self.frame += 1
         self.feed(self.img, self.rsz_mode)
 
+#-------------------------------------------------------------------------------
+# Text Matrix
+
+from PIL import ImageFont, ImageDraw
+
+class TextMatrix(ImageMatrix):
+
+    def print(self, text):
+        font = ImageFont.load_default()
+        (width, height) = font.getsize(text)
+        print('text {}x{}'.format(width , height))
+        img = Image.new('RGB', (width, height))
+        draw = ImageDraw.Draw(img)
+        draw.text((width, height), text, font=font, fill=(255, 255, 255))
+        draw.point((0, 0), (255, 255, 255))
+        self.feed(img, 0)
+        img.show()
+        img.close()
 
 #-------------------------------------------------------------------------------
 # Misc Matrix
