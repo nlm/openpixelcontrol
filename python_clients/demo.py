@@ -42,13 +42,17 @@ parser.add_argument('-H', dest='IP_PORT', default="127.0.0.1:7890",
                     help='IP:PORT to connect to')
 parser.add_argument('-t', dest='type', metavar='type', required='True',
                     choices=choices, help='the feature to show')
-parser.add_argument('-f', dest='fps', metavar='fps', type=float,
+parser.add_argument('-F', dest='fps', metavar='fps', type=float,
                     help='number of frames per second', default=0)
-parser.add_argument('-i', dest='iframes', metavar='frames', type=int,
+parser.add_argument('-I', dest='iframes', metavar='frames', type=int,
                     help='interpolation frames', default=0)
 parser.add_argument('-d', dest='driver', metavar='driver', type=str,
                     default='freespace', choices=drivers.keys(),
                     help='the screen driver')
+parser.add_argument('-f', dest='file', metavar='file', type=str,
+                    default='image.jpg', help='image file to load')
+parser.add_argument('-R', dest='resize', metavar='mode', type=int,
+                    default=2, help='resize mode (0=fill, 1=adj, 2=crop')
 args = parser.parse_args()
 
 #-------------------------------------------------------------------------------
@@ -77,10 +81,10 @@ elif args.type == 'anim':
     animated = True
     matrix = opcmatrix.AnimatedImageMatrix(client, driver,
                                            args.fps, args.iframes)
-    matrix.load('images/NyanCat.gif', 0)
+    matrix.load(args.file, args.resize)
 elif args.type == 'image':
     matrix = opcmatrix.ImageMatrix(client, driver)
-    matrix.load('images/mario1.gif', 0)
+    matrix.load(args.file, args.resize)
 elif args.type == 'test':
     matrix = opcmatrix.TestMatrix(client, driver)
 

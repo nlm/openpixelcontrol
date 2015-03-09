@@ -138,7 +138,8 @@ class TestMatrix(Matrix):
 
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
-        self.setpixel(self.width - 1, self.height - 1, (255, 255, 255))
+        for i in range(self.width * self.height):
+            self.pixels[i] = list((255, 255, 255))
         self.setpixel(0, 0, (255, 0, 0))
 
 
@@ -153,48 +154,68 @@ class ImageMatrix(Matrix):
     rsz_adjust = 1
     rsz_crop = 2
 
-    def load(self, filename, rsz_mode=1):
+    def load(self, filename, rsz_mode=0):
         with Image.open(filename) as im:
             self.feed(im, rsz_mode)
 
-    def feed(self, image, rsz_mode=1):
-        xshift = 0
-        yshift = 0
-        width = 0
-        height = 0
+    def getimgsize(self, image, rsz_mode):
+        
+        # Infos
+        #print('display size: {}x{}'.format(self.width, self.height))
+        dsp_ratio = self.width / self.height
+        #print('display ratio is {}'.format(dsp_ratio))
+        (img_width, img_height) = image.size
+        #print('image size: {}x{}'.format(img_width, img_height))
+        img_ratio = img_width / img_height
+        #print('image ratio is {}'.format(img_ratio))
 
-        # Adjust Mode
-        if rsz_mode == ImageMatrix.rsz_adjust:
-            # Calculting new size
-            (imw, imh) = image.size
-            #print('image ratio is {}'.format(imh / imw))
-            if imw / imh > self.width / self.height:
+        # Compute new size
+        if rsz_mode == ImageMatrix.rsz_fill:
+            return (self.width, self.height)
+        elif rsz_mode == ImageMatrix.rsz_adjust:
+            # Landscape
+            if img_ratio > dsp_ratio:
                 width = int(self.width)
-                height = int(imh * width / imw)
-                #print('{}x{} -> {}x{}'.format(imw, imh, neww, newh))
+                height = int(img_height * width / img_width)
+            # Portrait
             else:
                 height = int(self.height)
-                width = int(imw * height / imh)
-                #print('{}x{} -> {}x{}'.format(imw, imh, neww, newh))
-            # Shifting
-            xshift = int((self.width - width) / 2)
-            #print('{} -> {} (+{})'.format(self.width, neww, xshift))
-            yshift = int((self.height - height) / 2)
-            #print('{} -> {} (+{})'.format(self.height, newh, yshift))
-        # Fill Mode (default)
+                width = int(img_width * height / img_height)
+            return (width, height)
+        elif rsz_mode == ImageMatrix.rsz_crop:
+            # Landscape
+            if img_ratio < dsp_ratio:
+                width = int(self.width)
+                height = int(img_height * width / img_width)
+            # Portrait
+            else:
+                height = int(self.height)
+                width = int(img_width * height / img_height)
+            return (width, height)
         else:
-            width = self.width
-            height = self.height
+            raise ValueError
+
+    def feed(self, image, rsz_mode=1):
+
+        # Calculating size
+        (width, height) = self.getimgsize(image, rsz_mode)
+        #print('mode: {}'.format(rsz_mode))
+        #print('image render size: {}x{}'.format(width, height))
+        offset_x = int((self.width - width) / 2)
+        offset_y = int((self.height - height) / 2)
+        #print('offsets: {}x{}'.format(offset_x, offset_y))
 
         # Feeding data to the internal matrix
         self.clear()
         data = list(image.convert('RGB').resize((width, height), Image.BICUBIC).getdata())
-        try:
-            for y in range(self.height):
-                for x in reversed(range(self.width)):
-                    self.setpixel(x + xshift, y + yshift, data.pop())
-        except IndexError:
-            pass
+
+        for y in range(height):
+            for x in reversed(range(width)):
+                if (0 < x + offset_x < self.width and
+                    0 < y + offset_y < self.height):
+                    self.setpixel(x + offset_x, y + offset_y, data.pop())
+                else:
+                    data.pop()
 
 
 class AnimatedImageMatrix(AutoMatrix, ImageMatrix):
@@ -206,7 +227,7 @@ class AnimatedImageMatrix(AutoMatrix, ImageMatrix):
     def load(self, filename, rsz_mode=0):
         self.img = Image.open(filename)
         if self.fps == 0:
-            self.fps = 1000 / self.img.info['duration']
+            self.fps = 1000 / max(self.img.info['duration'], 10)
             print('auto-set fps to {}'.format(self.fps))
         self.frame = 0
         self.rsz_mode = rsz_mode
